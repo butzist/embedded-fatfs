@@ -30,11 +30,24 @@ pub enum Error<T> {
     InvalidFileNameLength,
     /// The provided file name contains an invalid character.
     UnsupportedFileNameCharacter,
+    /// An entry in the file table is corrupted/invalid.
+    CorruptedFileEntry,
+    /// The storage disk was unmounted and is not accessible anymore.
+    DiskNotMounted,
 }
 
 impl<T: Debug> IoError for Error<T> {
     fn kind(&self) -> ErrorKind {
         ErrorKind::Other
+    }
+}
+
+impl<T: IoError> From<&Error<T>> for Error<T> {
+    fn from(error: &Error<T>) -> Self {
+        match error {
+            Error::DiskNotMounted => Error::DiskNotMounted,
+            _ => panic!(),
+        }
     }
 }
 
@@ -76,6 +89,8 @@ impl<T: core::fmt::Display> core::fmt::Display for Error<T> {
             Error::NotFound => write!(f, "No such file or directory"),
             Error::AlreadyExists => write!(f, "File or directory already exists"),
             Error::CorruptedFileSystem => write!(f, "Corrupted file system"),
+            Error::CorruptedFileEntry => write!(f, "Corrupted file entry"),
+            Error::DiskNotMounted => write!(f, "Disk not mounted"),
         }
     }
 }
